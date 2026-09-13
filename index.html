@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buku Tamu Sederhana</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+    input, textarea, button { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
+    button { background: #0070f3; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0051b3; }
+    .card { background: #f9f9f9; padding: 12px; border-left: 4px solid #0070f3; margin-bottom: 10px; border-radius: 4px; }
+    .card small { color: #666; }
+  </style>
+</head>
+<body>
+
+  <h2>Kirim Pesan</h2>
+  <form id="guestForm">
+    <input type="text" id="name" placeholder="Nama Anda" required>
+    <textarea id="message" placeholder="Tulis pesan..." rows="3" required></textarea>
+    <button type="submit">Kirim</button>
+  </form>
+
+  <hr>
+  <h2>Daftar Pesan Masuk</h2>
+  <div id="list">Memuat pesan...</div>
+
+  <script>
+    async function loadData() {
+      const res = await fetch('/api/messages');
+      const data = await res.json();
+      const listDiv = document.getElementById('list');
+      
+      if (!data || data.length === 0) {
+        listDiv.innerHTML = '<p>Belum ada pesan yang masuk.</p>';
+        return;
+      }
+
+      listDiv.innerHTML = data.map(item => `
+        <div class="card">
+          <strong>${item.name}</strong><br>
+          <span>${item.message}</span><br>
+          <small>${new Date(item.created_at).toLocaleString()}</small>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('guestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const message = document.getElementById('message').value;
+
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, message })
+      });
+
+      document.getElementById('name').value = '';
+      document.getElementById('message').value = '';
+      loadData();
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
